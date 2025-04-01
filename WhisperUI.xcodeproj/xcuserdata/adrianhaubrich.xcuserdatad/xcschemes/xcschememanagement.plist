@@ -9,6 +9,29 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>WhisperUI_Release.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
+	</dict>
+	<key>SuppressBuildableAutocreation</key>
+	<dict>
+		<key>A112CA182D6632C500B07907</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>A112CA2B2D6632C700B07907</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>A112CA352D6632C700B07907</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 	</dict>
 </dict>
 </plist>
