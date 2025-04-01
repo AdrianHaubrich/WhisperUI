@@ -85,7 +85,6 @@ struct NewTranscriptView: View {
             Spacer()
             FileImportView() { newPath in
                 Task(priority: .userInitiated) {
-                    transcriptViewModel.latestFilePath = newPath
                     await transcriptViewModel.transcribe(use: .largeV3, from: newPath)
                 }
             }

@@ -87,13 +87,21 @@ final class TranscriptViewModel {
     func toggleTrancriptionMock() {
         self.transcriptionService = isTranscriptionMockActive ? MockTranscriptionService() : WhisperKitService(whisperKitWrapper: whisperKitWrapper)
     }
-    
-    
+}
+
+// MARK: - Transcribe
+extension TranscriptViewModel {
     func transcribe(use model: WhisperModelType, from url: URL) async {
         self.navigateToTranscriptionLoadingView()
         self.transcript = await transcriptionService.transcribe(use: model, from: url)
         await self.insertCurrentTranscript()
+        setAudioFilePathInTranscript(filePath: url.path())
         self.navigateToEditTranscription()
+    }
+    
+    private func setAudioFilePathInTranscript(filePath: String) {
+        self.transcript.audioFilePath = filePath
+        saveChanges()
     }
 }
 
@@ -109,6 +117,7 @@ extension TranscriptViewModel {
     
     public func navigateToEditTranscription() {
         currentViewState = .editTranscription
+        self.latestFilePath = URL(fileURLWithPath: transcript.audioFilePath ?? "")
     }
 }
 
@@ -128,6 +137,9 @@ extension TranscriptViewModel {
     func loadTranscript(transcript: Transcript) {
         Task {
             self.transcript = await transcriptRepository.fetchTranscript(withId: transcript.id) ?? TranscriptFactory.makeTranscript(from: TranscriptError.notInitialized)
+            
+            print("Load audio at path: \(transcript.audioFilePath ?? "no path")")
+            self.latestFilePath = URL(fileURLWithPath: transcript.audioFilePath ?? "")
         }
     }
 }
