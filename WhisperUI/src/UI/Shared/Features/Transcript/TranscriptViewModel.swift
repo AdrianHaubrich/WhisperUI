@@ -25,6 +25,7 @@ final class TranscriptViewModel {
     private let transcriptRepository: TranscriptRepository
     
     // MARK: Transcript
+    private(set) var transcripts: [Transcript] = []
     private(set) var transcript: Transcript = TranscriptFactory.makeTranscript(from: TranscriptError.notInitialized)
     private let commandInvoker: TranscriptCommandInvoker = .init()
     
@@ -286,9 +287,10 @@ extension TranscriptViewModel {
 extension TranscriptViewModel {
     func insertCurrentTranscript() async {
         await transcriptRepository.insertTranscript(transcript)
+        await self.loadTranscripts()
     }
     
-    func loadTranscripts() async -> [Transcript] {
-        return await transcriptRepository.fetchAllTranscripts()
+    func loadTranscripts() async {
+        self.transcripts = await transcriptRepository.fetchAllTranscripts()
     }
 }

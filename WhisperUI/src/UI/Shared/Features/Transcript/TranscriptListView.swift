@@ -11,8 +11,6 @@ import SwiftData
 struct TranscriptListView: View {
     @Environment(TranscriptViewModel.self) var transcriptViewModel
     
-    @State var transcripts: [Transcript] = []
-    
     @State var currentTranscript: Transcript?
     @State var isEditMode: Bool = false
     
@@ -26,7 +24,7 @@ struct TranscriptListView: View {
     
     var body: some View {
         VStack {
-            ForEach(transcripts) { transcript in
+            ForEach(transcriptViewModel.transcripts) { transcript in
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Spacer()
@@ -67,7 +65,7 @@ struct TranscriptListView: View {
                 }
             }
         }.task {
-            self.transcripts = await transcriptViewModel.loadTranscripts()
+            await transcriptViewModel.loadTranscripts()
         }
     }
 }
