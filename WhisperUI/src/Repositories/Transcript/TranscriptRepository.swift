@@ -18,7 +18,7 @@ protocol TranscriptRepository {
     func save() async
 }
 
-/// Singleton that encapsulates SwiftData logic for Transcripts
+/// Encapsulates SwiftData logic for Transcripts
 final class SwiftDataTranscriptRepository: TranscriptRepository {
     private let modelContainer: ModelContainer
     private let modelContext: ModelContext
