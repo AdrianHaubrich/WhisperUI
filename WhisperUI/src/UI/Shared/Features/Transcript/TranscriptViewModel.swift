@@ -7,15 +7,15 @@
 
 import SwiftUI
 
-enum TranscriptionViewState {
+enum TranscriptionViewState: Hashable {
     case newTranscript
     case inTranscription
-    case editTranscription
+    case editTranscription(_ id: String)
 }
 
 @Observable
+@MainActor
 final class TranscriptViewModel {
-    
     // MARK: Services
     private let whisperKitWrapper: WhisperKitWrapper
     private var transcriptionService: TranscriptionService
@@ -24,7 +24,7 @@ final class TranscriptViewModel {
     // MARK: Repository
     private let transcriptRepository: TranscriptRepository
     
-    // MARK: Transcript
+    // MARK: State
     private(set) var transcripts: [Transcript] = []
     private(set) var transcript: Transcript = TranscriptFactory.makeTranscript(from: TranscriptError.notInitialized)
     private let commandInvoker: TranscriptCommandInvoker = .init()
@@ -33,6 +33,7 @@ final class TranscriptViewModel {
     
     // MARK: View State
     public var currentViewState: TranscriptionViewState = .newTranscript
+    
     public var isInspectorPresented: Bool = true
     public var latestFilePath: URL?
     public var selectedSegmentId: String = ""
@@ -93,34 +94,16 @@ final class TranscriptViewModel {
 // MARK: - Transcribe
 extension TranscriptViewModel {
     func transcribe(use model: WhisperModelType, from url: URL, with filename: String) async {
-        self.navigateToTranscriptionLoadingView()
+        self.currentViewState = .inTranscription
         self.transcript = await transcriptionService.transcribe(use: model, from: url)
         await self.insertCurrentTranscript()
         setAudioFilename(filename: filename)
-        self.navigateToEditTranscription()
+        self.currentViewState = .editTranscription(self.transcript.id)
     }
     
     private func setAudioFilename(filename: String) {
         self.transcript.fileName = filename
         saveChanges()
-    }
-}
-
-// MARK: - Navigation
-extension TranscriptViewModel {
-    public func navigateToNewTranscription() {
-        currentViewState = .newTranscript
-    }
-    
-    public func navigateToTranscriptionLoadingView() {
-        currentViewState = .inTranscription
-    }
-    
-    public func navigateToEditTranscription() {
-        Task {
-            currentViewState = .editTranscription
-            self.latestFilePath = await FileSystemService().getFileURL(for: transcript.fileName ?? "")
-        }
     }
 }
 
@@ -137,16 +120,11 @@ extension TranscriptViewModel {
 
 // MARK: - Load Transcript
 extension TranscriptViewModel {
-    func loadTranscript(transcript: Transcript) {
-        Task {
-            self.transcript = await transcriptRepository.fetchTranscript(withId: transcript.id) ?? TranscriptFactory.makeTranscript(from: TranscriptError.notInitialized)
-            
-            Task {
-                currentViewState = .editTranscription
-                self.latestFilePath = await FileSystemService().getFileURL(for: transcript.fileName ?? "")
-                print("Load audio with name: \(transcript.fileName ?? "no name") at filepath: \(self.latestFilePath?.path() ?? "no path")")
-            }
-        }
+    func loadTranscript(with transcriptId: String) async {
+        self.transcript = await transcriptRepository.fetchTranscript(withId: transcriptId) ?? TranscriptFactory.makeTranscript(from: TranscriptError.notInitialized)
+        
+        self.latestFilePath = await FileSystemService().getFileURL(for: transcript.fileName ?? "")
+        print("Load audio with name: \(transcript.fileName ?? "no name") at filepath: \(self.latestFilePath?.path() ?? "no path")")
     }
 }
 

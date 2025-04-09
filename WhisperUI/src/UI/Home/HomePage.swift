@@ -14,23 +14,26 @@ struct HomePage: View {
         @Bindable var transcriptViewModel = transcriptViewModel
         
         NavigationSplitView {
-            ScrollView {
-                VStack(alignment: .leading) {
-                    Text("Select model")
-                        .font(.headline)
+            
+            List(selection: $transcriptViewModel.currentViewState) {
+                Section(header: Text("WhisperUI")) {
+                    NavigationLink(value: TranscriptionViewState.newTranscript) {
+                        Label("New Transcription", systemImage: "house")
+                    }
+                }
+                .task {
+                    await transcriptViewModel.loadTranscripts()
+                }
+            
+                Section(header: Text("Select model")) {
                     DownloadModelView()
-                    
-                    Text("Transcripts")
-                        .font(.headline)
-                        .padding(.top)
-                    Button("New Transcription") {
-                        transcriptViewModel.navigateToNewTranscription()
-                    }.buttonStyle(SecondaryButtonStyle())
-                    
+                }
+                
+                Section(header: Text("Transcripts")) {
                     TranscriptListView()
                 }
-                .padding(.horizontal)
             }
+            
 #if os(macOS)
         .frame(width: 250)
 #endif
@@ -41,8 +44,8 @@ struct HomePage: View {
                     NewTranscriptView()
                 case .inTranscription:
                     TranscriptionLoadingView()
-                case .editTranscription:
-                    EditTranscriptView()
+                case .editTranscription(let transcriptId):
+                    EditTranscriptView(transcriptId: transcriptId)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -83,9 +86,9 @@ struct NewTranscriptView: View {
     var body: some View {
         VStack {
             Spacer()
-            FileImportView() { newPath in
+            FileImportView() { newPath, newFilename in
                 Task(priority: .userInitiated) {
-                    await transcriptViewModel.transcribe(use: .largeV3, from: newPath)
+                    await transcriptViewModel.transcribe(use: .largeV3, from: newPath, with: newFilename)
                 }
             }
             .padding()
@@ -104,16 +107,25 @@ struct TranscriptionLoadingView: View {
 
 struct EditTranscriptView: View {
     @Environment(TranscriptViewModel.self) var transcriptViewModel
+    let transcriptId: String
     
     var body: some View {
         @Bindable var transcriptViewModel = transcriptViewModel
         
         ScrollView {
-            VStack {
+            LazyVStack {
                 TranscriptEditor()
             }
             .padding(.top)
             .padding(.horizontal)
+        }
+        .task {
+            await transcriptViewModel.loadTranscript(with: transcriptId)
+        }
+        .onChange(of: transcriptId) { _, _ in
+            Task {
+                await transcriptViewModel.loadTranscript(with: transcriptId)
+            }
         }
         
         if let latestFilePath = transcriptViewModel.latestFilePath {

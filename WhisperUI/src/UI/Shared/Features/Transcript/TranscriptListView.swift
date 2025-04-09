@@ -14,6 +14,8 @@ struct TranscriptListView: View {
     @State var currentTranscript: Transcript?
     @State var isEditMode: Bool = false
     
+    @FocusState private var isFocused: Bool
+    
     // DateFormatter for human-readable date and time.
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -23,8 +25,8 @@ struct TranscriptListView: View {
     }
     
     var body: some View {
-        VStack {
-            ForEach(transcriptViewModel.transcripts) { transcript in
+        ForEach(transcriptViewModel.transcripts) { transcript in
+            NavigationLink(value: TranscriptionViewState.editTranscription(transcript.id)) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Spacer()
@@ -45,27 +47,21 @@ struct TranscriptListView: View {
                         Text(transcript.title.isEmpty ? "Untitled" : transcript.title)
                             .font(.headline)
                     }
-                 
+                    
                     Text(dateFormatter.string(from: transcript.createdAt))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 8)
-                .onTapGesture(count: 2) {
-                    guard isEditMode == false else { return }
-                    
-                    self.currentTranscript = transcript
-                    self.isEditMode = true
-                }
-                .onTapGesture {
-                    guard isEditMode == false else { return }
-                    
-                    transcriptViewModel.loadTranscript(transcript: transcript)
-                    transcriptViewModel.navigateToEditTranscription()
-                }
             }
-        }.task {
-            await transcriptViewModel.loadTranscripts()
+            .onTapGesture(count: 2) { // FIXME: the current implementation messes with the List selection...
+                guard isEditMode == false else { return }
+                
+                self.currentTranscript = transcript
+                self.isEditMode = true
+            }
+            .task {
+                await transcriptViewModel.loadTranscripts()
+            }
         }
     }
 }
