@@ -16,9 +16,9 @@ struct TranscriptEditor: View {
         LazyVStack {
             ForEach(transcriptViewModel.transcript.segments) { segment in
                 TranscriptSegmentEditorView(segment: segment) { isFocused in
-                    self.transcriptViewModel.selectedSegmentId = segment.id
                     
                     if isFocused {
+                        self.transcriptViewModel.selectedSegmentId = segment.id
                         self.inspectorViewModel.currentInspector = .transcriptSegment
                     }
                 }
@@ -133,8 +133,10 @@ struct TranscriptSegmentEditorView: View {
             
             // Sync changes back to model 0.5s after last change
             debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
-                guard let segment = segment else { return }
-                transcriptViewModel.update(text: newValue, for: segment)
+                Task {
+                    guard let segment = await segment else { return }
+                    await transcriptViewModel.update(text: newValue, for: segment)
+                }
             }
         }
         .onChange(of: self.segment?.text) { oldValue, newValue in
