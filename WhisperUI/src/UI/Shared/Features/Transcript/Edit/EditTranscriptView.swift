@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct EditTranscriptView: View {
+    @Environment(InspectorViewModel.self) var inspectorViewModel
     @Environment(TranscriptViewModel.self) var transcriptViewModel
     let transcriptId: String
     
@@ -23,10 +24,12 @@ struct EditTranscriptView: View {
         }
         .task {
             await transcriptViewModel.loadTranscript(with: transcriptId)
+            inspectorViewModel.currentInspector = .transcript
         }
         .onChange(of: transcriptId) { _, _ in
             Task {
                 await transcriptViewModel.loadTranscript(with: transcriptId)
+                inspectorViewModel.currentInspector = .transcript
             }
         }
         

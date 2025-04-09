@@ -8,13 +8,20 @@
 import SwiftUI
 
 struct TranscriptEditor: View {
+    @Environment(InspectorViewModel.self) var inspectorViewModel
     @Environment(TranscriptViewModel.self) var transcriptViewModel
     @Environment(\.modelContext) var modelContext
     
     var body: some View {
         LazyVStack {
             ForEach(transcriptViewModel.transcript.segments) { segment in
-                TranscriptSegmentEditorView(segment: segment)
+                TranscriptSegmentEditorView(segment: segment) { isFocused in
+                    self.transcriptViewModel.selectedSegmentId = segment.id
+                    
+                    if isFocused {
+                        self.inspectorViewModel.currentInspector = .transcriptSegment
+                    }
+                }
                 Divider()
             }
         }
@@ -34,6 +41,8 @@ struct TranscriptSegmentEditorView: View {
     @FocusState private var isFocused: Bool
     @State private var isHovering: Bool = false
     
+    var onFocusChange: (_ isFocused: Bool) -> ()
+    
     var segment: TranscriptSegment? {
         transcriptViewModel.transcript.segments.first { $0.id == self.segmentId }
     }
@@ -42,8 +51,9 @@ struct TranscriptSegmentEditorView: View {
         return generateDiffAttributedText(currentText: self.text)
     }*/
     
-    init(segment: TranscriptSegment) {
+    init(segment: TranscriptSegment, onFocusChange: @escaping (_ isFocused: Bool) -> ()) {
         self.segmentId = segment.id
+        self.onFocusChange = onFocusChange
     }
     
     var body: some View {
@@ -91,10 +101,10 @@ struct TranscriptSegmentEditorView: View {
                     .onChange(of: isFocused) { _, newValue in
                             if newValue {
                                 // View is focused
-                                self.transcriptViewModel.selectedSegmentId = segmentId
-                                // self.transcriptViewModel.currentTime = TimeInterval(segment?.start ?? 0)
+                                onFocusChange(true)
                             } else {
                                 // View lost focus
+                                onFocusChange(false)
                             }
                         }
             }

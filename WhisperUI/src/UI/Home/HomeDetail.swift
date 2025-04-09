@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct HomeDetail: View {
+    @Environment(InspectorViewModel.self) var inspectorViewModel
     @Environment(TranscriptViewModel.self) var transcriptViewModel
     
     var body: some View {

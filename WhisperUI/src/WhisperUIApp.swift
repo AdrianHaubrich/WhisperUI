@@ -10,15 +10,16 @@ import SwiftData
 
 @main
 struct WhisperUIApp: App {
+    @State var inspectorViewModel: InspectorViewModel
     @State var transcriptViewModel: TranscriptViewModel
     @State var audioPlayerViewModel: AudioPlayerViewModel
     
     init() {
+        inspectorViewModel = InspectorViewModel()
         transcriptViewModel = TranscriptViewModel(
             whisperKitWrapper: WhisperKitWrapper(),
             transcriptRepository: SwiftDataTranscriptRepository()
         )
-        
         audioPlayerViewModel = AudioPlayerViewModel()
     }
 
@@ -26,6 +27,7 @@ struct WhisperUIApp: App {
         WindowGroup {
             ContentView()
         }
+        .environment(inspectorViewModel)
         .environment(transcriptViewModel)
         .environment(audioPlayerViewModel)
 #if os(macOS)

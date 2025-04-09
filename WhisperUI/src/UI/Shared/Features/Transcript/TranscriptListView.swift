@@ -53,12 +53,6 @@ struct TranscriptListView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .onTapGesture(count: 2) { // FIXME: the current implementation messes with the List selection...
-                guard isEditMode == false else { return }
-                
-                self.currentTranscript = transcript
-                self.isEditMode = true
-            }
             .task {
                 await transcriptViewModel.loadTranscripts()
             }

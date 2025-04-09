@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NewTranscriptView: View {
+    @Environment(InspectorViewModel.self) var inspectorViewModel
     @Environment(TranscriptViewModel.self) var transcriptViewModel
     
     var body: some View {
@@ -20,6 +21,8 @@ struct NewTranscriptView: View {
             }
             .padding()
             Spacer()
+        }.task {
+            inspectorViewModel.currentInspector = .none
         }
     }
 }

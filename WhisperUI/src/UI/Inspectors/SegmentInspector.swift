@@ -7,6 +7,60 @@
 
 import SwiftUI
 
+struct TranscriptInspector: View {
+    @Environment(TranscriptViewModel.self) var transcriptViewModel
+    
+    @State private var title: String = ""
+    @State private var isTitleInEdit: Bool = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading) {
+                HStack{
+                    Spacer()
+                }
+                
+                Text("Name")
+                    .font(.headline)
+                
+                if isTitleInEdit {
+                    HStack {
+                        TextField("Title", text: $title)
+                            .onSubmit {
+                                transcriptViewModel.updateTranscript(title: title)
+                                isTitleInEdit = false
+                            }
+                        
+                        Button {
+                            transcriptViewModel.updateTranscript(title: title)
+                            isTitleInEdit = false
+                        } label: {
+                            Label("Change name", systemImage: "checkmark")
+                                .labelStyle(.iconOnly)
+                        }.buttonStyle(PrimaryButtonStyle())
+                    }
+                } else {
+                    HStack {
+                        if transcriptViewModel.transcript.title.isEmpty {
+                            Text("Untitled")
+                        } else {
+                            Text(transcriptViewModel.transcript.title)
+                        }
+                        
+                        Button {
+                            isTitleInEdit = true
+                            title = transcriptViewModel.transcript.title
+                        } label: {
+                            Label("Edit name", systemImage: "pencil")
+                                .labelStyle(.iconOnly)
+                        }.buttonStyle(PrimaryButtonStyle())
+                    }
+                }
+            }
+        }
+    }
+}
+
 struct SegmentInspector: View {
     @Environment(TranscriptViewModel.self) var transcriptViewModel
     
@@ -14,7 +68,9 @@ struct SegmentInspector: View {
         @Bindable var transcriptViewModel = transcriptViewModel
         
         VStack {
-            if transcriptViewModel.selectedSegmentId != "" {
+            TranscriptInspector()
+            
+            VStack {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading) {
                         HStack{
@@ -103,16 +159,14 @@ struct SegmentInspector: View {
                         HStack{
                             Spacer()
                         }
-                        Text("Live preview")
+                        Text("Export preview")
                             .font(.headline)
-                        Text(transcriptViewModel.transcriptLivePreview)
+                        Text(transcriptViewModel.exportPreview)
                     }
                     
                     Spacer().frame(height: 12)
                     
-                }.padding(.horizontal)
-            } else {
-                Text("Select a segment...")
+                }
             }
         }
     }

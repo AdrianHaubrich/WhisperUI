@@ -13,6 +13,19 @@ enum TranscriptionViewState: Hashable {
     case editTranscription(_ id: String)
 }
 
+
+enum Inspector {
+    case none
+    case transcript
+    case transcriptSegment
+}
+
+@Observable
+@MainActor
+final class InspectorViewModel {
+    public var currentInspector: Inspector = .none
+}
+
 @Observable
 @MainActor
 final class TranscriptViewModel {
@@ -46,7 +59,7 @@ final class TranscriptViewModel {
     
     public var currentTime: TimeInterval = 0
     
-    public var transcriptLivePreview: String {
+    public var exportPreview: String {
         let text = transcript.segments.reduce(" ") { result, segment in
             result + formatSegmentText(segment: segment,
                                        includeLinebreaks: includeLinebreaks,
@@ -247,7 +260,7 @@ extension TranscriptViewModel {
 #elseif os(macOS)
         let pasteboard = NSPasteboard.general
         pasteboard.declareTypes([.string], owner: nil)
-        pasteboard.setString(transcriptLivePreview, forType: .string)
+        pasteboard.setString(exportPreview, forType: .string)
 #endif
     }
     

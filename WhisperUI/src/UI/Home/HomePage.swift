@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct HomePage: View {
+    @Environment(InspectorViewModel.self) var inspectorViewModel
     @Environment(TranscriptViewModel.self) var transcriptViewModel
     
     var body: some View {
@@ -21,7 +22,17 @@ struct HomePage: View {
         .inspector(isPresented: $transcriptViewModel.isInspectorPresented) {
             Divider()
             ScrollView {
-                SegmentInspector()
+                VStack {
+                    switch inspectorViewModel.currentInspector {
+                    case .transcript:
+                        TranscriptInspector()
+                    case .transcriptSegment:
+                        SegmentInspector()
+                    case .none:
+                        EmptyView()
+                    }
+                }
+                .padding(.horizontal)
             }
             .toolbar {
                 Spacer()
