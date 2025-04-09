@@ -11,12 +11,15 @@ import SwiftData
 @main
 struct WhisperUIApp: App {
     @State var transcriptViewModel: TranscriptViewModel
+    @State var audioPlayerViewModel: AudioPlayerViewModel
     
     init() {
         transcriptViewModel = TranscriptViewModel(
             whisperKitWrapper: WhisperKitWrapper(),
             transcriptRepository: SwiftDataTranscriptRepository()
         )
+        
+        audioPlayerViewModel = AudioPlayerViewModel()
     }
 
     var body: some Scene {
@@ -24,6 +27,7 @@ struct WhisperUIApp: App {
             ContentView()
         }
         .environment(transcriptViewModel)
+        .environment(audioPlayerViewModel)
 #if os(macOS)
         .commands {
             CommandGroup(replacing: .undoRedo) {

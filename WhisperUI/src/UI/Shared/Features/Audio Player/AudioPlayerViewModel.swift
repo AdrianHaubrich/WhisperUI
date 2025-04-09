@@ -10,16 +10,21 @@ import SwiftUI
 import AVFoundation
 
 /// An observable object that manages audio playback and progress updates.
-class AudioPlayerViewModel: ObservableObject {
-    @Published var isPlaying: Bool = false
-    @Published var progress: Double = 0.0
-    @Published var currentTime: TimeInterval = 0
-    @Published var duration: TimeInterval = 0
+@Observable
+class AudioPlayerViewModel {
+    static let defaultJumpInterval: TimeInterval = 5
+    
+    var isPlaying: Bool = false
+    var progress: Double = 0.0
+    var currentTime: TimeInterval = 0
+    var duration: TimeInterval = 0
 
     private var audioPlayer: AVAudioPlayer?
     private var timer: Timer?
 
-    init(fileURL: URL) {
+    init() {}
+    
+    func load(fileURL: URL) {
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
             audioPlayer?.prepareToPlay()
@@ -48,6 +53,32 @@ class AudioPlayerViewModel: ObservableObject {
         if audioPlayer.duration > 0 {
             self.progress = timeInterval / audioPlayer.duration
         }
+    }
+    
+    /// Jumps backwards in playback by the default number of seconds.
+    func jumpBackwards() {
+        jumpBackwards(seconds: AudioPlayerViewModel.defaultJumpInterval)
+    }
+    
+    /// Jumps backwards in playback by a given number of seconds.
+    func jumpBackwards(seconds: TimeInterval) {
+        guard let audioPlayer = audioPlayer else { return }
+        
+        let newTime = max(audioPlayer.currentTime - seconds, 0)
+        seek(timeInterval: newTime)
+    }
+    
+    /// Jumps forwards in playback by the default number of seconds.
+    func jumpForwards() {
+        jumpForwards(seconds: AudioPlayerViewModel.defaultJumpInterval)
+    }
+    
+    /// Jumps forwards in playback by a given number of seconds.
+    func jumpForwards(seconds: TimeInterval) {
+        guard let audioPlayer = audioPlayer else { return }
+        
+        let newTime = min(audioPlayer.currentTime + seconds, audioPlayer.duration)
+        seek(timeInterval: newTime)
     }
     
     deinit {

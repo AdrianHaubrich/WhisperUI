@@ -23,6 +23,7 @@ struct TranscriptEditor: View {
 
 struct TranscriptSegmentEditorView: View {
     @Environment(TranscriptViewModel.self) var transcriptViewModel
+    @Environment(AudioPlayerViewModel.self) var audioPlayerViewModel
     let segmentId: String
     
     @State private var shouldSkipNextModelUpdate: Bool = false
@@ -30,13 +31,16 @@ struct TranscriptSegmentEditorView: View {
     @State private var baseline: String = ""
     @State private var text: String = ""
     
+    @FocusState private var isFocused: Bool
+    @State private var isHovering: Bool = false
+    
     var segment: TranscriptSegment? {
         transcriptViewModel.transcript.segments.first { $0.id == self.segmentId }
     }
     
-    var diffAttributedText: NSAttributedString {
+    /*var diffAttributedText: NSAttributedString {
         return generateDiffAttributedText(currentText: self.text)
-    }
+    }*/
     
     init(segment: TranscriptSegment) {
         self.segmentId = segment.id
@@ -45,6 +49,7 @@ struct TranscriptSegmentEditorView: View {
     var body: some View {
         VStack {
             VStack(alignment: .leading) {
+                // MARK: Header
                 HStack {
                     SpeakerSelectionMenu(onSpeakerChange: { speaker in
                         guard let segment else { return }
@@ -56,19 +61,50 @@ struct TranscriptSegmentEditorView: View {
                     Text("\(FormatterService.formatTime(segment?.start ?? 0)) - \(FormatterService.formatTime(segment?.end ?? 0))")
                         .font(.headline)
                         .foregroundStyle(Color.gray)
+                    
+                    if isHovering || isFocused { // TODO: Solution for hover "play here" button on iOS
+                        Button {
+                            guard let start = segment?.start else { return }
+                            
+                            audioPlayerViewModel.seek(timeInterval: TimeInterval(start))
+                            if !audioPlayerViewModel.isPlaying {
+                                audioPlayerViewModel.play()
+                            }
+                        } label: {
+                            Label("Play here", systemImage: "play.fill")
+                        }.buttonStyle(SmallPrimaryButtonStyle())
+                    }
                 }
                 
-                AttributedTextEditor(text: $text, attributedText: diffAttributedText, onFocus: {
+                /*AttributedTextEditor(text: $text, attributedText: diffAttributedText, onFocus: { // FIXME: Check if AttributedTextEditor leads to performance issues...
                     DispatchQueue.main.async {
                         self.transcriptViewModel.selectedSegmentId = segmentId
                         self.transcriptViewModel.currentTime = TimeInterval(segment?.start ?? 0)
                     }
-                })
-                .frame(minHeight: 30)
-                .padding(4)
+                })*/
+                
+                // MARK: Editor
+                TextEditor(text: $text)
+                    .focused($isFocused)
+                    .frame(minHeight: 30)
+                    .padding(4)
+                    .onChange(of: isFocused) { _, newValue in
+                            if newValue {
+                                // View is focused
+                                self.transcriptViewModel.selectedSegmentId = segmentId
+                                // self.transcriptViewModel.currentTime = TimeInterval(segment?.start ?? 0)
+                            } else {
+                                // View lost focus
+                            }
+                        }
             }
         }
         .padding(.top, 8)
+#if os(macOS)
+        .onHover { hovering in
+            self.isHovering = hovering
+        }
+#endif
         .onAppear {
             if text.isEmpty {
                 self.shouldSkipNextModelUpdate = true

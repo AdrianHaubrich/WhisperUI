@@ -9,28 +9,28 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct FileImportView: View {
-    let onFilepathChanged: (_ path: URL) -> ()
+    let onFilepathChanged: (_ path: URL, _ filename: String) -> ()
     
     @State private var lastFilePath: URL?
     
     var body: some View {
         VStack {
-            FileImportDropArea() { path in
-                handleFileChange(newPath: path)
+            FileImportDropArea() { path, filename in
+                handleFileChange(newPath: path, newFilename: filename)
             }
         }
     }
     
-    private func handleFileChange(newPath: URL) {
+    private func handleFileChange(newPath: URL, newFilename: String) {
         if lastFilePath == nil || lastFilePath != newPath {
             lastFilePath = newPath
-            onFilepathChanged(newPath)
+            onFilepathChanged(newPath, newFilename)
         }
     }
 }
 
 struct FileImportDropArea: View {
-    let onFilepathChanged: (_ path: URL) -> ()
+    let onFilepathChanged: (_ path: URL, _ filename: String) -> ()
     @State private var fileSystemService = FileSystemService()
     
     var body: some View {
@@ -43,8 +43,8 @@ struct FileImportDropArea: View {
                     .font(.body)
                     .bold()
                 
-                FileImportButton(title: "select file") { path in
-                    onFilepathChanged(path)
+                FileImportButton(title: "select file") { path, filename in
+                    onFilepathChanged(path, filename)
                 }
             }
             .frame(width: 300, height: 300)
@@ -73,8 +73,8 @@ struct FileImportDropArea: View {
                     
                     Task {
                         do {
-                            let destinationURL = try await fileSystemService.copyFile(from: url)
-                            await self.onFilepathChanged(destinationURL)
+                            let result = try await fileSystemService.copyFile(from: url)
+                            await self.onFilepathChanged(result.url, result.filename)
                         } catch {
                             print("Error copying file: \(error.localizedDescription)")
                         }
@@ -93,7 +93,7 @@ struct FileImportButton: View {
     @State private var fileSystemService = FileSystemService()
     
     let title: String
-    let onFilepathChanged: (_ path: URL) -> ()
+    let onFilepathChanged: (_ path: URL, _ filename: String) -> ()
     
     var body: some View {
         Button(title) {
@@ -108,9 +108,9 @@ struct FileImportButton: View {
                     do {
                         if let originalURL = try result.get().first {
                             // Use the actor to copy the file.
-                            let destinationURL = try await fileSystemService.copyFile(from: originalURL)
+                            let result = try await fileSystemService.copyFile(from: originalURL)
                             // Return the new file URL via the callback.
-                            onFilepathChanged(destinationURL)
+                            onFilepathChanged(result.url, result.filename)
                         }
                     } catch {
                         print("Error handling file import: \(error.localizedDescription)")

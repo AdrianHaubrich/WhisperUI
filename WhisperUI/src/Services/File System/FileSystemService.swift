@@ -32,9 +32,14 @@ actor FileSystemService {
 
 // MARK: - Public API
 extension FileSystemService {
+    /// Returns the URL for a file in the "selected-files" directory given its file name.
+    func getFileURL(for fileName: String) -> URL {
+        return selectedFilesDirectory.appendingPathComponent(fileName)
+    }
+    
     /// Public entry point for copying a file into the selected-files directory.
     /// This method handles file coordination and security-scoped resource access.
-    func copyFile(from originalURL: URL) async throws -> URL {
+    func copyFile(from originalURL: URL) async throws -> (url: URL, filename: String) {
         let coordinator = NSFileCoordinator(filePresenter: nil)
         var coordinatorError: NSError?
         var safeURL: URL?
@@ -61,7 +66,7 @@ extension FileSystemService {
 extension FileSystemService {
     /// Copies a file from the given URL into the "selected-files" folder using FileManager.copyItem.
     /// The new filename preserves the original name with a UUID appended before the file extension.
-    private func copyFileUsingCopyItem(from originalURL: URL) async throws -> URL {
+    private func copyFileUsingCopyItem(from originalURL: URL) async throws -> (url: URL, filename: String) {
         // Begin accessing the file's security-scoped resource.
         guard originalURL.startAccessingSecurityScopedResource() else {
             throw NSError(domain: "FileSystemService",
@@ -81,11 +86,11 @@ extension FileSystemService {
         let destinationURL = selectedFilesDirectory.appendingPathComponent(newFilename)
 
         try fileManager.copyItem(at: originalURL, to: destinationURL)
-        return destinationURL
+        return (destinationURL, newFilename)
     }
     
     /// Copies a temporary file from the given URL into the "selected-files" folder by reading its data.
-    private func copyTempFileToSelectedFiles(from originalURL: URL) async throws -> URL {
+    private func copyTempFileToSelectedFiles(from originalURL: URL) async throws -> (url: URL, filename: String) {
         try createSelectedFilesDirectoryIfNeeded()
 
         let baseName = originalURL.deletingPathExtension().lastPathComponent
@@ -97,12 +102,12 @@ extension FileSystemService {
         let fileData = try Data(contentsOf: originalURL)
         try fileData.write(to: destinationURL)
         
-        return destinationURL
+        return (destinationURL, newFilename)
     }
 
     /// Copies a file from the given URL into the "selected-files" folder using a streaming approach for large files.
     /// This method reads and writes data in chunks to avoid loading the entire file into memory.
-    private func streamCopyFileToSelectedFiles(from originalURL: URL) async throws -> URL {
+    private func streamCopyFileToSelectedFiles(from originalURL: URL) async throws -> (url: URL, filename: String) {
         try createSelectedFilesDirectoryIfNeeded()
         
         let baseName = originalURL.deletingPathExtension().lastPathComponent
@@ -132,6 +137,6 @@ extension FileSystemService {
             }
         }
         
-        return destinationURL
+        return (destinationURL, newFilename)
     }
 }

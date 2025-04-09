@@ -92,16 +92,16 @@ final class TranscriptViewModel {
 
 // MARK: - Transcribe
 extension TranscriptViewModel {
-    func transcribe(use model: WhisperModelType, from url: URL) async {
+    func transcribe(use model: WhisperModelType, from url: URL, with filename: String) async {
         self.navigateToTranscriptionLoadingView()
         self.transcript = await transcriptionService.transcribe(use: model, from: url)
         await self.insertCurrentTranscript()
-        setAudioFilePathInTranscript(filePath: url.path())
+        setAudioFilename(filename: filename)
         self.navigateToEditTranscription()
     }
     
-    private func setAudioFilePathInTranscript(filePath: String) {
-        self.transcript.audioFilePath = filePath
+    private func setAudioFilename(filename: String) {
+        self.transcript.fileName = filename
         saveChanges()
     }
 }
@@ -117,8 +117,10 @@ extension TranscriptViewModel {
     }
     
     public func navigateToEditTranscription() {
-        currentViewState = .editTranscription
-        self.latestFilePath = URL(fileURLWithPath: transcript.audioFilePath ?? "")
+        Task {
+            currentViewState = .editTranscription
+            self.latestFilePath = await FileSystemService().getFileURL(for: transcript.fileName ?? "")
+        }
     }
 }
 
@@ -139,8 +141,11 @@ extension TranscriptViewModel {
         Task {
             self.transcript = await transcriptRepository.fetchTranscript(withId: transcript.id) ?? TranscriptFactory.makeTranscript(from: TranscriptError.notInitialized)
             
-            print("Load audio at path: \(transcript.audioFilePath ?? "no path")")
-            self.latestFilePath = URL(fileURLWithPath: transcript.audioFilePath ?? "")
+            Task {
+                currentViewState = .editTranscription
+                self.latestFilePath = await FileSystemService().getFileURL(for: transcript.fileName ?? "")
+                print("Load audio with name: \(transcript.fileName ?? "no name") at filepath: \(self.latestFilePath?.path() ?? "no path")")
+            }
         }
     }
 }

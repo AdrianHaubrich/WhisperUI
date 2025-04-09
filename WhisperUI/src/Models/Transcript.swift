@@ -25,7 +25,7 @@ final class Transcript {
     var language: String
     var segments: [TranscriptSegment]
     var createdAt: Date
-    var audioFilePath: String?
+    var fileName: String?
     
     @Transient var error: TranscriptError?
     
@@ -36,7 +36,7 @@ final class Transcript {
         self.segments = segments
         self.error = error
         self.createdAt = createdAt ?? Date()
-        self.audioFilePath = audioFilePath
+        self.fileName = audioFilePath
     }
 }
 
@@ -66,7 +66,7 @@ extension Transcript: Codable {
         try container.encode(language, forKey: .language)
         try container.encode(segments, forKey: .segments)
         try container.encode(createdAt, forKey: .createdAt)
-        try container.encode(audioFilePath, forKey: .audioFilePath)
+        try container.encode(fileName, forKey: .audioFilePath)
     }
 }
 
