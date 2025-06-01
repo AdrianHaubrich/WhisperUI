@@ -12,12 +12,14 @@ struct HomeSidebar: View {
     
     var body: some View {
         @Bindable var transcriptViewModel = transcriptViewModel
-        
+   
         List(selection: $transcriptViewModel.currentViewState) {
             Section(header: Text("WhisperUI")) {
                 NavigationLink(value: TranscriptionViewState.newTranscript) {
                     Label("New Transcription", systemImage: "waveform.badge.mic")
                 }
+                
+                // TODO: View to monitor / manage a transcription that is in progress... maybe inside .newTranscription state...
             }
             .task {
                 await transcriptViewModel.loadTranscripts()

@@ -34,14 +34,7 @@ struct EditTranscriptView: View {
         }
         
         if let latestFilePath = transcriptViewModel.latestFilePath {
-            AudioPlayerView(fileURL: latestFilePath, currentTime: $transcriptViewModel.currentTime)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white)
-                        .shadow(radius: 8)
-                )
-                .padding(.horizontal)
-                .padding(.bottom)
+            AudioPlayerCard(fileURL: latestFilePath, currentTime: $transcriptViewModel.currentTime)
         }
     }
 }

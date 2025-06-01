@@ -56,6 +56,8 @@ struct TranscriptInspector: View {
                         }.buttonStyle(PrimaryButtonStyle())
                     }
                 }
+                
+                // TODO: Option to delete Transcript... (with audio file)
             }
         }
     }
