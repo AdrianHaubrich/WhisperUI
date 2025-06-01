@@ -53,6 +53,15 @@ struct TranscriptListView: View {
                         .foregroundColor(.secondary)
                 }
             }
+            .contextMenu {
+                Button(role: .destructive) {
+                    Task {
+                        await transcriptViewModel.deleteTranscript(transcript)
+                    }
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
             .task {
                 await transcriptViewModel.loadTranscripts()
             }

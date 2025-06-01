@@ -256,7 +256,7 @@ extension TranscriptViewModel {
     // TODO: execute via command
     public func copyExportableTranscript() {
 #if os(iOS)
-        UIPasteboard.general.string = transcript.getText()
+        UIPasteboard.general.string = exportPreview
 #elseif os(macOS)
         let pasteboard = NSPasteboard.general
         pasteboard.declareTypes([.string], owner: nil)
@@ -264,11 +264,15 @@ extension TranscriptViewModel {
 #endif
     }
     
-    // TODO: execute via command
+    // TODO: execute via command!!!
     public func importTranscriptFromClipboard() {
         // TODO: iOS
+        let transcriptString: String? = nil
+        
+#if os(macOS)
         let pasteboard = NSPasteboard.general
-        let transcriptString = pasteboard.string(forType: .string)
+        pasteboard.string(forType: .string)
+#endif
         print("Importing transcript from pasteboard: \(transcriptString ?? "no content")")
         
         guard let transcriptString else { return }
@@ -281,12 +285,19 @@ extension TranscriptViewModel {
 
 // MARK: - Transcript Repository
 extension TranscriptViewModel {
-    func insertCurrentTranscript() async {
-        await transcriptRepository.insertTranscript(transcript)
+    // TODO: Ask user if he really wants to delete it...
+    // TODO: Deselect deleted transcript...
+    public func deleteTranscript(_ transcript: Transcript) async {
+        await transcriptRepository.deleteTranscript(transcript)
         await self.loadTranscripts()
     }
     
-    func loadTranscripts() async {
+    public func loadTranscripts() async {
         self.transcripts = await transcriptRepository.fetchAllTranscripts()
+    }
+    
+    private func insertCurrentTranscript() async {
+        await transcriptRepository.insertTranscript(transcript)
+        await self.loadTranscripts()
     }
 }
